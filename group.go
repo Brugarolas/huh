@@ -2,6 +2,7 @@ package huh
 
 import (
 	"strings"
+	"unicode"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/paginator"
@@ -303,17 +304,26 @@ func (g *Group) buildView() {
 
 // View renders the group.
 func (g *Group) View() string {
-	var view strings.Builder
+	// Write the footer view containing errors/keybindings to an alternate
+	// buffer to ensure it is non-empty before appending a line separator.
+	var view, foot strings.Builder
 	view.WriteString(g.viewport.View())
-	view.WriteRune('\n')
 	errors := g.Errors()
 	if g.showHelp && len(errors) <= 0 {
-		view.WriteString(g.help.ShortHelpView(g.fields[g.paginator.Page].KeyBinds()))
+		foot.WriteString(g.help.ShortHelpView(g.fields[g.paginator.Page].KeyBinds()))
 	}
 	if g.showErrors {
 		for _, err := range errors {
-			view.WriteString(g.theme.Focused.ErrorMessage.Render(err.Error()))
+			foot.WriteString(g.theme.Focused.ErrorMessage.Render(err.Error()))
 		}
+	}
+	if foot.Len() > 0 && hasNonSpace(foot.String()) {
+		view.Grow(foot.Len() + 1) // +1 for newline/gap
+		view.WriteRune('\n')
+		view.WriteString(foot.String())
 	}
 	return view.String()
 }
+
+func isNonSpace(r rune) bool    { return !unicode.IsSpace(r) }
+func hasNonSpace(s string) bool { return strings.IndexFunc(s, isNonSpace) != -1 }
