@@ -2,7 +2,6 @@ package huh
 
 import (
 	"strings"
-	"unicode"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/paginator"
@@ -317,13 +316,10 @@ func (g *Group) View() string {
 			foot.WriteString(g.theme.Focused.ErrorMessage.Render(err.Error()))
 		}
 	}
-	if foot.Len() > 0 && hasNonSpace(foot.String()) {
+	if strings.TrimSpace(foot.String()) != "" {
 		view.Grow(foot.Len() + 1) // +1 for newline/gap
 		view.WriteRune('\n')
 		view.WriteString(foot.String())
 	}
 	return view.String()
 }
-
-func isNonSpace(r rune) bool    { return !unicode.IsSpace(r) }
-func hasNonSpace(s string) bool { return strings.IndexFunc(s, isNonSpace) != -1 }
