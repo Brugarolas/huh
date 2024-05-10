@@ -63,6 +63,7 @@ type Form struct {
 	keymap     *KeyMap
 	teaOptions []tea.ProgramOption
 	output     io.Writer
+	layout     Layout
 }
 
 // NewForm returns a form with the given groups and default themes and
@@ -79,6 +80,7 @@ func NewForm(groups ...*Group) *Form {
 		paginator: p,
 		keymap:    NewDefaultKeyMap(),
 		results:   make(map[string]any),
+		layout:    LayoutDefault,
 		teaOptions: []tea.ProgramOption{
 			tea.WithOutput(os.Stderr),
 		},
@@ -266,6 +268,7 @@ func (f *Form) WithWidth(width int) *Form {
 	}
 	f.width = width
 	for _, group := range f.groups {
+		width := f.layout.GroupWidth(f, group, width)
 		group.WithWidth(width)
 	}
 	return f
@@ -293,6 +296,14 @@ func (f *Form) WithOutput(w io.Writer) *Form {
 // WithProgramOptions sets the tea options of the form.
 func (f *Form) WithProgramOptions(opts ...tea.ProgramOption) *Form {
 	f.teaOptions = opts
+	return f
+}
+
+// WithLayout sets the layout on a form.
+//
+// This allows customization of the form group layout.
+func (f *Form) WithLayout(layout Layout) *Form {
+	f.layout = layout
 	return f
 }
 
@@ -426,6 +437,9 @@ func (f *Form) PrevField() tea.Cmd {
 func (f *Form) Init() tea.Cmd {
 	cmds := make([]tea.Cmd, len(f.groups))
 	for i, group := range f.groups {
+		if i == 0 {
+			group.active = true
+		}
 		cmds[i] = group.Init()
 	}
 
@@ -452,7 +466,8 @@ func (f *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			break
 		}
 		for _, group := range f.groups {
-			group.WithWidth(msg.Width)
+			width := f.layout.GroupWidth(f, group, msg.Width)
+			group.WithWidth(width)
 		}
 		if f.height > 0 {
 			break
@@ -502,6 +517,7 @@ func (f *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return submit()
 			}
 		}
+		f.groups[f.paginator.Page].active = true
 		return f, f.groups[f.paginator.Page].Init()
 
 	case prevGroupMsg:
@@ -516,6 +532,7 @@ func (f *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
+		f.groups[f.paginator.Page].active = true
 		return f, f.groups[f.paginator.Page].Init()
 	}
 
@@ -546,7 +563,7 @@ func (f *Form) View() string {
 		return ""
 	}
 
-	return f.groups[f.paginator.Page].View()
+	return f.layout.View(f)
 }
 
 // Run runs the form.
