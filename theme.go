@@ -17,26 +17,6 @@ type Theme struct {
 	Help           help.Styles
 }
 
-// copy returns a copy of a theme with all children styles copied.
-func (t Theme) copy() Theme {
-	return Theme{
-		Form:           t.Form.Copy(),
-		Group:          t.Group.Copy(),
-		FieldSeparator: t.FieldSeparator.Copy(),
-		Blurred:        t.Blurred.copy(),
-		Focused:        t.Focused.copy(),
-		Help: help.Styles{
-			Ellipsis:       t.Help.Ellipsis.Copy(),
-			ShortKey:       t.Help.ShortKey.Copy(),
-			ShortDesc:      t.Help.ShortDesc.Copy(),
-			ShortSeparator: t.Help.ShortSeparator.Copy(),
-			FullKey:        t.Help.FullKey.Copy(),
-			FullDesc:       t.Help.FullDesc.Copy(),
-			FullSeparator:  t.Help.FullSeparator.Copy(),
-		},
-	}
-}
-
 // FieldStyles are the styles for input fields.
 type FieldStyles struct {
 	Base           lipgloss.Style
@@ -140,43 +120,24 @@ func ThemeBase() *Theme {
 		MarginRight(1)
 
 	// Focused styles.
-	f := &t.Focused
-	f.Base = lipgloss.NewStyle().
-		PaddingLeft(1).
-		BorderStyle(lipgloss.ThickBorder()).
-		BorderLeft(true)
-	f.Card = lipgloss.NewStyle().
-		PaddingLeft(1)
-	f.ErrorIndicator = lipgloss.NewStyle().
-		SetString(" *")
-	f.ErrorMessage = lipgloss.NewStyle().
-		SetString(" *")
-	f.SelectSelector = lipgloss.NewStyle().
-		SetString("> ")
-	f.NextIndicator = lipgloss.NewStyle().
-		MarginLeft(1).
-		SetString("→")
-	f.PrevIndicator = lipgloss.NewStyle().
-		MarginRight(1).
-		SetString("←")
-	f.MultiSelectSelector = lipgloss.NewStyle().
-		SetString("> ")
-	f.SelectedPrefix = lipgloss.NewStyle().
-		SetString("[•] ")
-	f.UnselectedPrefix = lipgloss.NewStyle().
-		SetString("[ ] ")
-	f.FocusedButton = button.Copy().
-		Foreground(lipgloss.Color("0")).
-		Background(lipgloss.Color("7"))
-	f.BlurredButton = button.Copy().
-		Foreground(lipgloss.Color("7")).
-		Background(lipgloss.Color("0"))
-	f.TextInput.Placeholder = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
+	t.Focused.Base = lipgloss.NewStyle().PaddingLeft(1).BorderStyle(lipgloss.ThickBorder()).BorderLeft(true)
+	t.Focused.Card = lipgloss.NewStyle().PaddingLeft(1)
+	t.Focused.ErrorIndicator = lipgloss.NewStyle().SetString(" *")
+	t.Focused.ErrorMessage = lipgloss.NewStyle().SetString(" *")
+	t.Focused.SelectSelector = lipgloss.NewStyle().SetString("> ")
+	t.Focused.NextIndicator = lipgloss.NewStyle().MarginLeft(1).SetString("→")
+	t.Focused.PrevIndicator = lipgloss.NewStyle().MarginRight(1).SetString("←")
+	t.Focused.MultiSelectSelector = lipgloss.NewStyle().SetString("> ")
+	t.Focused.SelectedPrefix = lipgloss.NewStyle().SetString("[•] ")
+	t.Focused.UnselectedPrefix = lipgloss.NewStyle().SetString("[ ] ")
+	t.Focused.FocusedButton = button.Foreground(lipgloss.Color("0")).Background(lipgloss.Color("7"))
+	t.Focused.BlurredButton = button.Foreground(lipgloss.Color("7")).Background(lipgloss.Color("0"))
+	t.Focused.TextInput.Placeholder = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 
 	t.Help = help.New().Styles
 
 	// Blurred styles.
-	t.Blurred = f.copy()
+	t.Blurred = t.Focused
 	t.Blurred.Base = t.Blurred.Base.BorderStyle(lipgloss.HiddenBorder())
 	t.Blurred.MultiSelectSelector = lipgloss.NewStyle().SetString("  ")
 	t.Blurred.NextIndicator = lipgloss.NewStyle()
@@ -187,7 +148,7 @@ func ThemeBase() *Theme {
 
 // ThemeCharm returns a new theme based on the Charm color scheme.
 func ThemeCharm() *Theme {
-	t := ThemeBase().copy()
+	t := ThemeBase()
 
 	var (
 		normalFg = lipgloss.AdaptiveColor{Light: "235", Dark: "252"}
@@ -225,17 +186,17 @@ func ThemeCharm() *Theme {
 	f.TextInput.Placeholder.Foreground(lipgloss.AdaptiveColor{Light: "248", Dark: "238"})
 	f.TextInput.Prompt.Foreground(fuchsia)
 
-	t.Blurred = f.copy()
-	t.Blurred.Base.BorderStyle(lipgloss.HiddenBorder())
+  t.Blurred = f.copy()
+	t.Blurred.Base = f.Base.BorderStyle(lipgloss.HiddenBorder())
 	t.Blurred.NextIndicator = lipgloss.NewStyle()
 	t.Blurred.PrevIndicator = lipgloss.NewStyle()
 
-	return &t
+	return t
 }
 
 // ThemeDracula returns a new theme based on the Dracula color scheme.
 func ThemeDracula() *Theme {
-	t := ThemeBase().copy()
+	t := ThemeBase()
 
 	var (
 		background = lipgloss.AdaptiveColor{Dark: "#282a36"}
@@ -274,12 +235,12 @@ func ThemeDracula() *Theme {
 	f.TextInput.Placeholder.Foreground(comment)
 	f.TextInput.Prompt.Foreground(yellow)
 
-	t.Blurred = f.copy()
+  t.Blurred = f.copy()
 	t.Blurred.Base = t.Blurred.Base.BorderStyle(lipgloss.HiddenBorder())
 	t.Blurred.NextIndicator = lipgloss.NewStyle()
 	t.Blurred.PrevIndicator = lipgloss.NewStyle()
 
-	return &t
+	return t
 }
 
 // ThemeBase16 returns a new theme based on the base16 color scheme.
@@ -312,19 +273,21 @@ func ThemeBase16() *Theme {
 
 	t.Blurred = f.copy()
 	t.Blurred.Base = t.Blurred.Base.BorderStyle(lipgloss.HiddenBorder())
-	t.Blurred.Title.Foreground(lipgloss.Color("8"))
-	t.Blurred.NoteTitle.Foreground(lipgloss.Color("8"))
-	t.Blurred.TextInput.Prompt.Foreground(lipgloss.Color("8"))
-	t.Blurred.TextInput.Text.Foreground(lipgloss.Color("7"))
+	t.Blurred.NoteTitle = t.Blurred.NoteTitle.Foreground(lipgloss.Color("8"))
+	t.Blurred.Title = t.Blurred.NoteTitle.Foreground(lipgloss.Color("8"))
+
+	t.Blurred.TextInput.Prompt = t.Blurred.TextInput.Prompt.Foreground(lipgloss.Color("8"))
+	t.Blurred.TextInput.Text = t.Blurred.TextInput.Text.Foreground(lipgloss.Color("7"))
+
 	t.Blurred.NextIndicator = lipgloss.NewStyle()
 	t.Blurred.PrevIndicator = lipgloss.NewStyle()
 
-	return &t
+	return t
 }
 
 // ThemeCatppuccin returns a new theme based on the Catppuccin color scheme.
 func ThemeCatppuccin() *Theme {
-	t := ThemeBase().copy()
+	t := ThemeBase()
 
 	light := catppuccin.Latte
 	dark := catppuccin.Mocha
@@ -368,15 +331,15 @@ func ThemeCatppuccin() *Theme {
 	f.TextInput.Prompt.Foreground(pink)
 
 	t.Blurred = f.copy()
-	t.Blurred.Base.BorderStyle(lipgloss.HiddenBorder())
+	t.Blurred.Base = t.Blurred.Base.BorderStyle(lipgloss.HiddenBorder())
 
-	t.Help.Ellipsis.Foreground(subtext0)
-	t.Help.ShortKey.Foreground(subtext0)
-	t.Help.ShortDesc.Foreground(overlay1)
-	t.Help.ShortSeparator.Foreground(subtext0)
-	t.Help.FullKey.Foreground(subtext0)
-	t.Help.FullDesc.Foreground(overlay1)
-	t.Help.FullSeparator.Foreground(subtext0)
+	t.Help.Ellipsis = t.Help.Ellipsis.Foreground(subtext0)
+	t.Help.ShortKey = t.Help.ShortKey.Foreground(subtext0)
+	t.Help.ShortDesc = t.Help.ShortDesc.Foreground(overlay1)
+	t.Help.ShortSeparator = t.Help.ShortSeparator.Foreground(subtext0)
+	t.Help.FullKey = t.Help.FullKey.Foreground(subtext0)
+	t.Help.FullDesc = t.Help.FullDesc.Foreground(overlay1)
+	t.Help.FullSeparator = t.Help.FullSeparator.Foreground(subtext0)
 
-	return &t
+	return t
 }

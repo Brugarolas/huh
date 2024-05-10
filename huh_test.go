@@ -12,6 +12,7 @@ import (
 )
 
 var pretty = lipgloss.NewStyle().
+	Width(60).
 	Border(lipgloss.NormalBorder()).
 	MarginTop(1).
 	Padding(1, 3, 1, 2)
@@ -120,7 +121,7 @@ func TestForm(t *testing.T) {
 	//   ↑ up • ↓ down • / filter • enter select
 	//
 
-	if !strings.Contains(view, "Shell?") {
+	if !strings.Contains(view, "┃ Shell?") {
 		t.Log(pretty.Render(view))
 		t.Error("Expected form to contain Shell? title")
 	}
@@ -738,7 +739,6 @@ func TestPrevGroup(t *testing.T) {
 func TestNote(t *testing.T) {
 	field := NewNote().Title("Taco").Description("How may we take your order?").Next(true)
 	f := NewForm(NewGroup(field))
-	f.theme.Focused.Base.Border(lipgloss.HiddenBorder())
 	f.Update(f.Init())
 
 	view := ansi.Strip(f.View())
@@ -838,25 +838,14 @@ func batchUpdate(m tea.Model, cmd tea.Cmd) tea.Model {
 	if cmd == nil {
 		return m
 	}
-
 	msg := cmd()
-	if msg == nil {
+	m, cmd = m.Update(msg)
+	if cmd == nil {
 		return m
 	}
-
-	switch msg := msg.(type) {
-	case tea.BatchMsg:
-		for _, c := range msg {
-			m, cmd = m.Update(c())
-			if cmd == nil {
-				continue
-			}
-		}
-		return batchUpdate(m, cmd)
-	}
-
+	msg = cmd()
 	m, cmd = m.Update(msg)
-	return batchUpdate(m, cmd)
+	return m
 }
 
 func keys(runes ...rune) tea.KeyMsg {
