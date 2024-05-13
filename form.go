@@ -10,7 +10,6 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/paginator"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/log"
 )
 
 const defaultWidth = 80
@@ -568,12 +567,6 @@ func (f *Form) View() string {
 
 // Run runs the form.
 func (f *Form) Run() error {
-	debugFile, err := tea.LogToFile("debug.log", "debug")
-	if err != nil {
-		return err
-	}
-	log.SetOutput(debugFile)
-
 	f.submitCmd = tea.Quit
 	f.cancelCmd = tea.Quit
 
