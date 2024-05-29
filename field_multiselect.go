@@ -167,17 +167,34 @@ func (m *MultiSelect[T]) Blur() tea.Cmd {
 
 // KeyBinds returns the help message for the multi-select field.
 func (m *MultiSelect[T]) KeyBinds() []key.Binding {
-	return []key.Binding{
+	bindings := []key.Binding{
 		m.keymap.Toggle,
 		m.keymap.Up,
 		m.keymap.Down,
-		m.keymap.Filter,
-		m.keymap.SetFilter,
-		m.keymap.ClearFilter,
+	}
+
+	// only show filter keybindings if the field is filterable
+	if m.filterable {
+		bindings = append(bindings,
+			m.keymap.Filter,
+			m.keymap.SetFilter,
+			m.keymap.ClearFilter,
+		)
+	}
+
+	bindings = append(bindings,
 		m.keymap.Prev,
 		m.keymap.Submit,
 		m.keymap.Next,
+	)
+
+	// only show select all keybindings if limit does not apply to the field
+	if m.limit == 0 || m.limit >= len(m.options) {
+		bindings = append(bindings, m.keymap.SelectAll)
 	}
+	bindings = append(bindings, m.keymap.ClearAll)
+
+	return bindings
 }
 
 // Init initializes the multi-select field.
@@ -254,7 +271,8 @@ func (m *MultiSelect[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keymap.Toggle) && !m.filtering:
 			for i, option := range m.options {
 				if option.Key == m.filteredOptions[m.cursor].Key {
-					if !m.options[m.cursor].selected && m.limit > 0 && m.numSelected() >= m.limit {
+					if !m.options[m.cursor].selected && m.limit > 0 && m.numSelected() >= m.limit ||
+						m.options[m.cursor].disabled {
 						break
 					}
 					selected := m.options[i].selected
@@ -274,6 +292,8 @@ func (m *MultiSelect[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			return m, NextField
+		case key.Matches(msg, m.keymap.SelectAll, m.keymap.ClearAll):
+			m.toggleSelections(key.Matches(msg, m.keymap.SelectAll))
 		}
 
 		if m.filtering {
@@ -382,10 +402,18 @@ func (m *MultiSelect[T]) choicesView() string {
 
 		if m.filteredOptions[i].selected {
 			sb.WriteString(styles.SelectedPrefix.String())
-			sb.WriteString(styles.SelectedOption.Render(option.Key))
+			if option.disabled {
+				sb.WriteString(styles.DisabledOption.Render(option.Key))
+			} else {
+				sb.WriteString(styles.SelectedOption.Render(option.Key))
+			}
 		} else {
 			sb.WriteString(styles.UnselectedPrefix.String())
-			sb.WriteString(styles.UnselectedOption.Render(option.Key))
+			if option.disabled {
+				sb.WriteString(styles.DisabledOption.Render(option.Key))
+			} else {
+				sb.WriteString(styles.UnselectedOption.Render(option.Key))
+			}
 		}
 		if i < len(m.options)-1 {
 			sb.WriteString("\n")
@@ -437,6 +465,9 @@ func (m *MultiSelect[T]) printOptions() {
 
 // setFilter sets the filter of the select field.
 func (m *MultiSelect[T]) setFilter(filter bool) {
+	if !m.filterable {
+		return
+	}
 	m.filtering = filter
 	m.keymap.SetFilter.SetEnabled(filter)
 	m.keymap.Filter.SetEnabled(!filter)
@@ -563,4 +594,32 @@ func (m *MultiSelect[T]) GetKey() string {
 // GetValue returns the multi-select's value.
 func (m *MultiSelect[T]) GetValue() any {
 	return *m.value
+}
+
+// toggleSelections toggles the selected state of all multiple options.
+func (m *MultiSelect[T]) toggleSelections(selectValue bool) {
+	// ignore inputs if in filtering mode
+	if m.filtering {
+		return
+	}
+
+	// select all and limit are mutually exclusive, so we do not update the
+	// selected state of the options if the limit applies
+	if selectValue && m.limit > 0 && m.limit < len(m.options) {
+		return
+	}
+
+	// update the selected state of both the filteredOptions and the options
+	// this allows the form to display the correct state when in the filter mode
+	// and when the filter is removed to show the complete list of options
+	for i, option := range m.filteredOptions {
+		m.filteredOptions[i].selected = selectValue
+		for j, o := range m.options {
+			if o.Key == option.Key {
+				m.options[j].selected = selectValue
+			}
+		}
+	}
+
+	return
 }

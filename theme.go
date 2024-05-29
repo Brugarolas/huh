@@ -30,6 +30,7 @@ type FieldStyles struct {
 	Option         lipgloss.Style // Select options
 	NextIndicator  lipgloss.Style
 	PrevIndicator  lipgloss.Style
+	DisabledOption lipgloss.Style
 
 	// FilePicker styles.
 	Directory lipgloss.Style
@@ -62,6 +63,45 @@ type TextInputStyles struct {
 	Placeholder lipgloss.Style
 	Prompt      lipgloss.Style
 	Text        lipgloss.Style
+}
+
+// copy returns a copy of a TextInputStyles with all children styles copied.
+func (t TextInputStyles) copy() TextInputStyles {
+	return TextInputStyles{
+		Cursor:      t.Cursor.Copy(),
+		Placeholder: t.Placeholder.Copy(),
+		Prompt:      t.Prompt.Copy(),
+		Text:        t.Text.Copy(),
+	}
+}
+
+// copy returns a copy of a FieldStyles with all children styles copied.
+func (f FieldStyles) copy() FieldStyles {
+	return FieldStyles{
+		Base:                f.Base.Copy(),
+		Title:               f.Title.Copy(),
+		Description:         f.Description.Copy(),
+		ErrorIndicator:      f.ErrorIndicator.Copy(),
+		ErrorMessage:        f.ErrorMessage.Copy(),
+		SelectSelector:      f.SelectSelector.Copy(),
+		NextIndicator:       f.NextIndicator.Copy(),
+		PrevIndicator:       f.PrevIndicator.Copy(),
+		Option:              f.Option.Copy(),
+		Directory:           f.Directory.Copy(),
+		File:                f.File.Copy(),
+		MultiSelectSelector: f.MultiSelectSelector.Copy(),
+		SelectedOption:      f.SelectedOption.Copy(),
+		DisabledOption:      f.DisabledOption.Copy(),
+		SelectedPrefix:      f.SelectedPrefix.Copy(),
+		UnselectedOption:    f.UnselectedOption.Copy(),
+		UnselectedPrefix:    f.UnselectedPrefix.Copy(),
+		FocusedButton:       f.FocusedButton.Copy(),
+		BlurredButton:       f.BlurredButton.Copy(),
+		TextInput:           f.TextInput.copy(),
+		Card:                f.Card.Copy(),
+		NoteTitle:           f.NoteTitle.Copy(),
+		Next:                f.Next.Copy(),
+	}
 }
 
 const (
@@ -118,34 +158,37 @@ func ThemeCharm() *Theme {
 		fuchsia  = lipgloss.Color("#F780E2")
 		green    = lipgloss.AdaptiveColor{Light: "#02BA84", Dark: "#02BF87"}
 		red      = lipgloss.AdaptiveColor{Light: "#FF4672", Dark: "#ED567A"}
+		comment  = lipgloss.AdaptiveColor{Light: "", Dark: "243"}
 	)
 
-	t.Focused.Base = t.Focused.Base.BorderForeground(lipgloss.Color("238"))
-	t.Focused.Title = t.Focused.Title.Foreground(indigo).Bold(true)
-	t.Focused.NoteTitle = t.Focused.NoteTitle.Foreground(indigo).Bold(true).MarginBottom(1)
-	t.Focused.Directory = t.Focused.Directory.Foreground(indigo)
-	t.Focused.Description = t.Focused.Description.Foreground(lipgloss.AdaptiveColor{Light: "", Dark: "243"})
-	t.Focused.ErrorIndicator = t.Focused.ErrorIndicator.Foreground(red)
-	t.Focused.ErrorMessage = t.Focused.ErrorMessage.Foreground(red)
-	t.Focused.SelectSelector = t.Focused.SelectSelector.Foreground(fuchsia)
-	t.Focused.NextIndicator = t.Focused.NextIndicator.Foreground(fuchsia)
-	t.Focused.PrevIndicator = t.Focused.PrevIndicator.Foreground(fuchsia)
-	t.Focused.Option = t.Focused.Option.Foreground(normalFg)
-	t.Focused.MultiSelectSelector = t.Focused.MultiSelectSelector.Foreground(fuchsia)
-	t.Focused.SelectedOption = t.Focused.SelectedOption.Foreground(green)
-	t.Focused.SelectedPrefix = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#02CF92", Dark: "#02A877"}).SetString("✓ ")
-	t.Focused.UnselectedPrefix = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "", Dark: "243"}).SetString("• ")
-	t.Focused.UnselectedOption = t.Focused.UnselectedOption.Foreground(normalFg)
-	t.Focused.FocusedButton = t.Focused.FocusedButton.Foreground(cream).Background(fuchsia)
-	t.Focused.Next = t.Focused.FocusedButton
-	t.Focused.BlurredButton = t.Focused.BlurredButton.Foreground(normalFg).Background(lipgloss.AdaptiveColor{Light: "252", Dark: "237"})
+	f := &t.Focused
+	f.Base = f.Base.BorderForeground(lipgloss.Color("238"))
+	f.Title.Foreground(indigo).Bold(true)
+	f.NoteTitle.Foreground(indigo).Bold(true).MarginBottom(1)
+	f.Directory.Foreground(indigo)
+	f.Description.Foreground(comment)
+	f.ErrorIndicator.Foreground(red)
+	f.ErrorMessage.Foreground(red)
+	f.SelectSelector.Foreground(fuchsia)
+	f.NextIndicator.Foreground(fuchsia)
+	f.PrevIndicator.Foreground(fuchsia)
+	f.Option.Foreground(normalFg)
+	f.MultiSelectSelector.Foreground(fuchsia)
+	f.SelectedOption.Foreground(green)
+	f.DisabledOption.Foreground(comment)
+	f.SelectedPrefix = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#02CF92", Dark: "#02A877"}).SetString("✓ ")
+	f.UnselectedPrefix = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "", Dark: "243"}).SetString("• ")
+	f.UnselectedOption.Foreground(normalFg)
+	f.FocusedButton.Foreground(cream).Background(fuchsia)
+	f.Next = f.FocusedButton.Copy()
+	f.BlurredButton.Foreground(normalFg).Background(lipgloss.AdaptiveColor{Light: "252", Dark: "237"})
 
-	t.Focused.TextInput.Cursor = t.Focused.TextInput.Cursor.Foreground(green)
-	t.Focused.TextInput.Placeholder = t.Focused.TextInput.Placeholder.Foreground(lipgloss.AdaptiveColor{Light: "248", Dark: "238"})
-	t.Focused.TextInput.Prompt = t.Focused.TextInput.Prompt.Foreground(fuchsia)
+	f.TextInput.Cursor.Foreground(green)
+	f.TextInput.Placeholder.Foreground(lipgloss.AdaptiveColor{Light: "248", Dark: "238"})
+	f.TextInput.Prompt.Foreground(fuchsia)
 
-	t.Blurred = t.Focused
-	t.Blurred.Base = t.Focused.Base.BorderStyle(lipgloss.HiddenBorder())
+  t.Blurred = f.copy()
+	t.Blurred.Base = f.Base.BorderStyle(lipgloss.HiddenBorder())
 	t.Blurred.NextIndicator = lipgloss.NewStyle()
 	t.Blurred.PrevIndicator = lipgloss.NewStyle()
 
@@ -167,31 +210,33 @@ func ThemeDracula() *Theme {
 		yellow     = lipgloss.AdaptiveColor{Dark: "#f1fa8c"}
 	)
 
-	t.Focused.Base = t.Focused.Base.BorderForeground(selection)
-	t.Focused.Title = t.Focused.Title.Foreground(purple)
-	t.Focused.NoteTitle = t.Focused.NoteTitle.Foreground(purple)
-	t.Focused.Description = t.Focused.Description.Foreground(comment)
-	t.Focused.ErrorIndicator = t.Focused.ErrorIndicator.Foreground(red)
-	t.Focused.Directory = t.Focused.Directory.Foreground(purple)
-	t.Focused.File = t.Focused.File.Foreground(foreground)
-	t.Focused.ErrorMessage = t.Focused.ErrorMessage.Foreground(red)
-	t.Focused.SelectSelector = t.Focused.SelectSelector.Foreground(yellow)
-	t.Focused.NextIndicator = t.Focused.NextIndicator.Foreground(yellow)
-	t.Focused.PrevIndicator = t.Focused.PrevIndicator.Foreground(yellow)
-	t.Focused.Option = t.Focused.Option.Foreground(foreground)
-	t.Focused.MultiSelectSelector = t.Focused.MultiSelectSelector.Foreground(yellow)
-	t.Focused.SelectedOption = t.Focused.SelectedOption.Foreground(green)
-	t.Focused.SelectedPrefix = t.Focused.SelectedPrefix.Foreground(green)
-	t.Focused.UnselectedOption = t.Focused.UnselectedOption.Foreground(foreground)
-	t.Focused.UnselectedPrefix = t.Focused.UnselectedPrefix.Foreground(comment)
-	t.Focused.FocusedButton = t.Focused.FocusedButton.Foreground(yellow).Background(purple).Bold(true)
-	t.Focused.BlurredButton = t.Focused.BlurredButton.Foreground(foreground).Background(background)
+	f := &t.Focused
+	f.Base.BorderForeground(selection)
+	f.Title.Foreground(purple)
+	f.NoteTitle.Foreground(purple)
+	f.Description.Foreground(comment)
+	f.ErrorIndicator.Foreground(red)
+	f.Directory.Foreground(purple)
+	f.File.Foreground(foreground)
+	f.ErrorMessage.Foreground(red)
+	f.SelectSelector.Foreground(yellow)
+	f.NextIndicator.Foreground(yellow)
+	f.PrevIndicator.Foreground(yellow)
+	f.Option.Foreground(foreground)
+	f.MultiSelectSelector.Foreground(yellow)
+	f.SelectedOption.Foreground(green)
+	f.DisabledOption.Foreground(comment)
+	f.SelectedPrefix.Foreground(green)
+	f.UnselectedOption.Foreground(foreground)
+	f.UnselectedPrefix.Foreground(comment)
+	f.FocusedButton.Foreground(yellow).Background(purple).Bold(true)
+	f.BlurredButton.Foreground(foreground).Background(background)
 
-	t.Focused.TextInput.Cursor = t.Focused.TextInput.Cursor.Foreground(yellow)
-	t.Focused.TextInput.Placeholder = t.Focused.TextInput.Placeholder.Foreground(comment)
-	t.Focused.TextInput.Prompt = t.Focused.TextInput.Prompt.Foreground(yellow)
+	f.TextInput.Cursor.Foreground(yellow)
+	f.TextInput.Placeholder.Foreground(comment)
+	f.TextInput.Prompt.Foreground(yellow)
 
-	t.Blurred = t.Focused
+  t.Blurred = f.copy()
 	t.Blurred.Base = t.Blurred.Base.BorderStyle(lipgloss.HiddenBorder())
 	t.Blurred.NextIndicator = lipgloss.NewStyle()
 	t.Blurred.PrevIndicator = lipgloss.NewStyle()
@@ -201,31 +246,33 @@ func ThemeDracula() *Theme {
 
 // ThemeBase16 returns a new theme based on the base16 color scheme.
 func ThemeBase16() *Theme {
-	t := ThemeBase()
+	t := ThemeBase().copy()
 
-	t.Focused.Base = t.Focused.Base.BorderForeground(lipgloss.Color("8"))
-	t.Focused.Title = t.Focused.Title.Foreground(lipgloss.Color("6"))
-	t.Focused.NoteTitle = t.Focused.NoteTitle.Foreground(lipgloss.Color("6"))
-	t.Focused.Directory = t.Focused.Directory.Foreground(lipgloss.Color("6"))
-	t.Focused.Description = t.Focused.Description.Foreground(lipgloss.Color("8"))
-	t.Focused.ErrorIndicator = t.Focused.ErrorIndicator.Foreground(lipgloss.Color("9"))
-	t.Focused.ErrorMessage = t.Focused.ErrorMessage.Foreground(lipgloss.Color("9"))
-	t.Focused.SelectSelector = t.Focused.SelectSelector.Foreground(lipgloss.Color("3"))
-	t.Focused.NextIndicator = t.Focused.NextIndicator.Foreground(lipgloss.Color("3"))
-	t.Focused.PrevIndicator = t.Focused.PrevIndicator.Foreground(lipgloss.Color("3"))
-	t.Focused.Option = t.Focused.Option.Foreground(lipgloss.Color("7"))
-	t.Focused.MultiSelectSelector = t.Focused.MultiSelectSelector.Foreground(lipgloss.Color("3"))
-	t.Focused.SelectedOption = t.Focused.SelectedOption.Foreground(lipgloss.Color("2"))
-	t.Focused.SelectedPrefix = t.Focused.SelectedPrefix.Foreground(lipgloss.Color("2"))
-	t.Focused.UnselectedOption = t.Focused.UnselectedOption.Foreground(lipgloss.Color("7"))
-	t.Focused.FocusedButton = t.Focused.FocusedButton.Foreground(lipgloss.Color("7")).Background(lipgloss.Color("5"))
-	t.Focused.BlurredButton = t.Focused.BlurredButton.Foreground(lipgloss.Color("7")).Background(lipgloss.Color("0"))
+	f := &t.Focused
+	f.Base.BorderForeground(lipgloss.Color("8"))
+	f.Title.Foreground(lipgloss.Color("6"))
+	f.NoteTitle.Foreground(lipgloss.Color("6"))
+	f.Directory.Foreground(lipgloss.Color("6"))
+	f.Description.Foreground(lipgloss.Color("8"))
+	f.ErrorIndicator.Foreground(lipgloss.Color("9"))
+	f.ErrorMessage.Foreground(lipgloss.Color("9"))
+	f.SelectSelector.Foreground(lipgloss.Color("3"))
+	f.NextIndicator.Foreground(lipgloss.Color("3"))
+	f.PrevIndicator.Foreground(lipgloss.Color("3"))
+	f.Option.Foreground(lipgloss.Color("7"))
+	f.MultiSelectSelector.Foreground(lipgloss.Color("3"))
+	f.SelectedOption.Foreground(lipgloss.Color("2"))
+	f.DisabledOption.Foreground(lipgloss.Color("8"))
+	f.SelectedPrefix.Foreground(lipgloss.Color("2"))
+	f.UnselectedOption.Foreground(lipgloss.Color("7"))
+	f.FocusedButton.Foreground(lipgloss.Color("7")).Background(lipgloss.Color("5"))
+	f.BlurredButton.Foreground(lipgloss.Color("7")).Background(lipgloss.Color("0"))
 
-	t.Focused.TextInput.Cursor.Foreground(lipgloss.Color("5"))
-	t.Focused.TextInput.Placeholder.Foreground(lipgloss.Color("8"))
-	t.Focused.TextInput.Prompt.Foreground(lipgloss.Color("3"))
+	f.TextInput.Cursor.Foreground(lipgloss.Color("5"))
+	f.TextInput.Placeholder.Foreground(lipgloss.Color("8"))
+	f.TextInput.Prompt.Foreground(lipgloss.Color("3"))
 
-	t.Blurred = t.Focused
+	t.Blurred = f.copy()
 	t.Blurred.Base = t.Blurred.Base.BorderStyle(lipgloss.HiddenBorder())
 	t.Blurred.NoteTitle = t.Blurred.NoteTitle.Foreground(lipgloss.Color("8"))
 	t.Blurred.Title = t.Blurred.NoteTitle.Foreground(lipgloss.Color("8"))
@@ -259,30 +306,32 @@ func ThemeCatppuccin() *Theme {
 		cursor   = lipgloss.AdaptiveColor{Light: light.Rosewater().Hex, Dark: dark.Rosewater().Hex}
 	)
 
-	t.Focused.Base = t.Focused.Base.BorderForeground(subtext1)
-	t.Focused.Title = t.Focused.Title.Foreground(mauve)
-	t.Focused.NoteTitle = t.Focused.NoteTitle.Foreground(mauve)
-	t.Focused.Directory = t.Focused.Directory.Foreground(mauve)
-	t.Focused.Description = t.Focused.Description.Foreground(subtext0)
-	t.Focused.ErrorIndicator = t.Focused.ErrorIndicator.Foreground(red)
-	t.Focused.ErrorMessage = t.Focused.ErrorMessage.Foreground(red)
-	t.Focused.SelectSelector = t.Focused.SelectSelector.Foreground(pink)
-	t.Focused.NextIndicator = t.Focused.NextIndicator.Foreground(pink)
-	t.Focused.PrevIndicator = t.Focused.PrevIndicator.Foreground(pink)
-	t.Focused.Option = t.Focused.Option.Foreground(text)
-	t.Focused.MultiSelectSelector = t.Focused.MultiSelectSelector.Foreground(pink)
-	t.Focused.SelectedOption = t.Focused.SelectedOption.Foreground(green)
-	t.Focused.SelectedPrefix = t.Focused.SelectedPrefix.Foreground(green)
-	t.Focused.UnselectedPrefix = t.Focused.UnselectedPrefix.Foreground(text)
-	t.Focused.UnselectedOption = t.Focused.UnselectedOption.Foreground(text)
-	t.Focused.FocusedButton = t.Focused.FocusedButton.Foreground(base).Background(pink)
-	t.Focused.BlurredButton = t.Focused.BlurredButton.Foreground(text).Background(base)
+	f := &t.Focused
+	f.Base.BorderForeground(subtext1)
+	f.Title.Foreground(mauve)
+	f.NoteTitle.Foreground(mauve)
+	f.Directory.Foreground(mauve)
+	f.Description.Foreground(subtext0)
+	f.ErrorIndicator.Foreground(red)
+	f.ErrorMessage.Foreground(red)
+	f.SelectSelector.Foreground(pink)
+	f.NextIndicator.Foreground(pink)
+	f.PrevIndicator.Foreground(pink)
+	f.Option.Foreground(text)
+	f.MultiSelectSelector.Foreground(pink)
+	f.SelectedOption.Foreground(green)
+	f.DisabledOption.Foreground(subtext0)
+	f.SelectedPrefix.Foreground(green)
+	f.UnselectedPrefix.Foreground(text)
+	f.UnselectedOption.Foreground(text)
+	f.FocusedButton.Foreground(base).Background(pink)
+	f.BlurredButton.Foreground(text).Background(base)
 
-	t.Focused.TextInput.Cursor = t.Focused.TextInput.Cursor.Foreground(cursor)
-	t.Focused.TextInput.Placeholder = t.Focused.TextInput.Placeholder.Foreground(overlay0)
-	t.Focused.TextInput.Prompt = t.Focused.TextInput.Prompt.Foreground(pink)
+	f.TextInput.Cursor.Foreground(cursor)
+	f.TextInput.Placeholder.Foreground(overlay0)
+	f.TextInput.Prompt.Foreground(pink)
 
-	t.Blurred = t.Focused
+	t.Blurred = f.copy()
 	t.Blurred.Base = t.Blurred.Base.BorderStyle(lipgloss.HiddenBorder())
 
 	t.Help.Ellipsis = t.Help.Ellipsis.Foreground(subtext0)
