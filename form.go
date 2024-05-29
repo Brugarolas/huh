@@ -254,6 +254,7 @@ func (f *Form) WithKeyMap(keymap *KeyMap) *Form {
 	for _, group := range f.groups {
 		group.WithKeyMap(keymap)
 	}
+	f.UpdateFieldPositions()
 	return f
 }
 
@@ -288,7 +289,6 @@ func (f *Form) WithHeight(height int) *Form {
 
 // WithOutput sets the io.Writer to output the form.
 func (f *Form) WithOutput(w io.Writer) *Form {
-	f.output = w
 	f.teaOptions = append(f.teaOptions, tea.WithOutput(w))
 	return f
 }
